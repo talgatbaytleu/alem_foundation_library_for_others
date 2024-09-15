@@ -14,4 +14,6 @@ func main() {
 	fmt.Println(a.ReadLine(file))
 	fmt.Println(a.ReadLine(file))
 	fmt.Println(a.ReadLine(file))
+	fmt.Println(a.ReadLine(file))
+	fmt.Println(a.ReadLine(file))
 }

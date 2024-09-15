@@ -5,41 +5,57 @@ import (
 )
 
 type CSVstruct struct {
-	current_symbol []byte
-  previous_symbol byte
-	current_line   string
-  quote_enabled bool
+	current_symbol     byte
+	previous_symbol    byte
+	current_line       string
+	current_field      string
+	current_line_slice []string
+	quote_enabled      bool
 }
 
-func (CSV CSVstruct) ReadLine(r io.Reader) (string, error) {
-	CSV.current_symbol = make([]byte, 1)
-	CSV.current_line = ""
-  var quotes_counter int
+func (c CSVstruct) ReadLine(r io.Reader) (string, error) {
+	helper_slice := make([]byte, 1)
+	c.current_line = ""
+	var err error
 	for {
-		_, err := r.Read(CSV.current_symbol)
-		if CSV.current_line == "" {
-      if CSV.current_symbol[0] == '\n' {
-        continue
-      } else if CSV.current_symbol[0] == '"' {
-        CSV.quote_enabled = true
-        continue
-      }
-    } else if {
+		_, err = r.Read(helper_slice)
+		c.current_symbol = helper_slice[0]
 
-		} else if !CSV.quote_enabled && (err == io.EOF || CSV.current_symbol[0] == '\n' || CSV.current_symbol[0] == '\r') {
-			break
-    } else {
-			CSV.current_line += string(CSV.current_symbol[0])
+		if !c.quote_enabled {
+			if c.current_line == "" {
+				if c.current_symbol == '\n' {
+					continue
+				} else if c.current_symbol == '"' {
+					c.quote_enabled = true
+					continue
+				}
+			} else if c.previous_symbol == ',' {
+				if c.current_symbol == '"' {
+					c.quote_enabled = true
+				}
+			} else if c.current_symbol == '\n' || c.current_symbol == '\r' {
+				break
+			} else if c.current_symbol == '"' {
+				err = ErrQuote
+				break
+			}
+		} else {
 		}
-    CSV.previous_symbol = CSV.current_symbol[0]
+
+		if err == ErrQuote {
+			return "", err
+		} else {
+			return c.current_line, err
+		}
 	}
-	return CSV.current_line, err
+
+	return c.current_line, err
 }
 
-func (CSV CSVstruct) GetField(n int) (string, error) {
+func (c CSVstruct) GetField(n int) (string, error) {
 	return "", nil
 }
 
-func (CSV CSVstruct) GetNumberOfFields() int {
+func (c CSVstruct) GetNumberOfFields() int {
 	return 0
 }
